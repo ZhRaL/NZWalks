@@ -35,13 +35,28 @@ public class SQLWalkRepository : IWalkRepository
         return walk;
     }
 
-    public async Task<Walk?> UpdateAsync(Guid id, Walk region)
+    public async Task<Walk?> UpdateAsync(Guid id, Walk walk)
     {
-        throw new NotImplementedException();
+        Walk? currentWalk = await _dbContext.Walks.FirstOrDefaultAsync(walk => walk.Id == id);
+        if(currentWalk == null) return null;
+        
+        currentWalk.Region = walk.Region;
+        currentWalk.Name = walk.Name;
+        currentWalk.WalkImageUrl = walk.WalkImageUrl;
+        currentWalk.Description = walk.Description;
+        currentWalk.Difficulty = walk.Difficulty;
+        currentWalk.LengthInKm = walk.LengthInKm;
+        
+        await _dbContext.SaveChangesAsync();
+        return currentWalk;
     }
 
     public async Task<Walk?> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        Walk? currentWalk = await _dbContext.Walks.FirstOrDefaultAsync(walk => walk.Id == id);
+        if(currentWalk == null) return null;
+        _dbContext.Walks.Remove(currentWalk);
+        await _dbContext.SaveChangesAsync();
+        return currentWalk;
     }
 }

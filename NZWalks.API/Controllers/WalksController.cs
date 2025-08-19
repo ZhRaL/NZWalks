@@ -48,9 +48,21 @@ public class WalksController : ControllerBase
     }
 
     [HttpPut]
+    [Route("{id:Guid}")]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateWalkRequestDto updateWalkRequestDto)
     {
         var walkDomainModel = _mapper.Map<Walk>(updateWalkRequestDto);
-        return null;
+        Walk? updatedWalk = await _repository.UpdateAsync(id, walkDomainModel);
+        if(updatedWalk == null) return NotFound();
+        return Ok(_mapper.Map<WalkDto>(updatedWalk));
+    }
+
+    [HttpDelete]
+    [Route("{id:Guid}")]
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    {
+        Walk? deletedWalk = await _repository.DeleteAsync(id);
+        if(deletedWalk == null) return NotFound();
+        return Ok(deletedWalk);
     }
 }
