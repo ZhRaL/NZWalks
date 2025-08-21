@@ -32,9 +32,10 @@ public class WalksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] string? sortBy, 
+        [FromQuery] bool? isAscending, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 1000)
     {
-        var walks = await _repository.GetAllAsync();
+        var walks = await _repository.GetAllAsync(filterOn, filterQuery,sortBy, isAscending ?? true, pageNumber, pageSize);
         
         return Ok(_mapper.Map<List<WalkDto>>(walks));
     }
