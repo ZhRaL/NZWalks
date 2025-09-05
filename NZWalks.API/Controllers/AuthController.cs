@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NZWalks.API.Models.DTO;
+using NZWalks.API.Repositories;
 
 namespace NZWalks.API.Controllers
 {
@@ -11,11 +12,14 @@ namespace NZWalks.API.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly ITokenRepository _tokenRepository;
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
+            ITokenRepository tokenRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _tokenRepository = tokenRepository;
         }
 
         [HttpPost]
@@ -34,9 +38,10 @@ namespace NZWalks.API.Controllers
             {
                 if (request.Roles != null && request.Roles.Any())
                     identityResult = await _userManager.AddToRolesAsync(identityUser, request.Roles);
-                
-                if(identityResult.Succeeded) return Ok("User was Registered! Please login.");
+
+                if (identityResult.Succeeded) return Ok("User was Registered! Please login.");
             }
+
             return BadRequest("Something went wrong!");
         }
 
@@ -50,11 +55,22 @@ namespace NZWalks.API.Controllers
                 var checkPasswordResult = await _userManager.CheckPasswordAsync(user, request.Password);
                 if (checkPasswordResult)
                 {
-                    // Create Token
-                    return Ok();
+                    // Get ROles for this user
+                    var roles = await _userManager.GetRolesAsync(user);
+
+                    if (roles != null)
+                    {
+                        // Create Token
+                        var jwtToken = _tokenRepository.CreateJwtToken(user, roles.ToList());
+                        var response = new LoginResponseDto
+                        {
+                            JwtToken = jwtToken
+                        };
+                        return Ok(response);
+                    }
                 }
             }
-            
+
             return BadRequest("Something went wrong!");
         }
     }
