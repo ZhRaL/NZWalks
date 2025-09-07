@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,19 +18,24 @@ public class RegionsController : ControllerBase
 {
     private readonly IRegionRepository _regionRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<RegionsController> _logger;
 
-    public RegionsController(IRegionRepository regionRepository, IMapper mapper)
+    public RegionsController(IRegionRepository regionRepository, IMapper mapper, ILogger<RegionsController> logger)
     {
         _regionRepository = regionRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     [HttpGet]
-    [Authorize(Roles = "Reader")]
+    // [Authorize(Roles = "Reader")]
     public async Task<IActionResult> GetAllRegions()
     {
+        _logger.LogInformation("GetAllRegions was invoked");
         var regions = await _regionRepository.GetAllAsync();
 
+        _logger.LogInformation($"Finished with request data: {JsonSerializer.Serialize(regions)}");
+        
         var regionDto = _mapper.Map<List<RegionDto>>(regions);
         return Ok(regionDto);
     }
